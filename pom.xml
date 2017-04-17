@@ -16,6 +16,7 @@
 
 	<properties>
 		<spring.version>5.0.0.BUILD-SNAPSHOT</spring.version>
+		<jackson.version>2.9.0.pr2</jackson.version>
 	</properties>
 
 	<dependencies>
@@ -39,6 +40,13 @@
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-core</artifactId>
 				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson</groupId>
+				<artifactId>jackson-bom</artifactId>
+				<version>${jackson.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.springframework</groupId>
