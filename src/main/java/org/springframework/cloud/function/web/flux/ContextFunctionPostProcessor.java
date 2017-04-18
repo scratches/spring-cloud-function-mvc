@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -88,13 +90,10 @@ class ContextFunctionPostProcessor
 	}
 
 	private Class<?> findType(AbstractBeanDefinition definition, int index) {
-		Object source = definition.getSource();
 		Type param;
-		if (source instanceof StandardMethodMetadata) {
-			ParameterizedType type;
-			type = (ParameterizedType) ((StandardMethodMetadata) source)
-					.getIntrospectedMethod().getGenericReturnType();
-			Type typeArgumentAtIndex = type.getActualTypeArguments()[index];
+		Type[] types = findTypes(definition);
+		if (types.length > index) {
+			Type typeArgumentAtIndex = types[index];
 			if (typeArgumentAtIndex instanceof ParameterizedType) {
 				param = ((ParameterizedType) typeArgumentAtIndex)
 						.getActualTypeArguments()[0];
@@ -102,23 +101,34 @@ class ContextFunctionPostProcessor
 			else {
 				param = typeArgumentAtIndex;
 			}
+			if (param instanceof ParameterizedType) {
+				ParameterizedType concrete = (ParameterizedType) param;
+				param = concrete.getRawType();
+			}
+		}
+		else {
+			param = types[0];
+		}
+		return ClassUtils.resolveClassName(param.getTypeName(),
+				registry.getClass().getClassLoader());
+	}
+
+	private Type[] findTypes(AbstractBeanDefinition definition) {
+		Object source = definition.getSource();
+		if (source instanceof StandardMethodMetadata) {
+			ParameterizedType type = (ParameterizedType) ((StandardMethodMetadata) source)
+					.getIntrospectedMethod().getGenericReturnType();
+			return type.getActualTypeArguments();
 		}
 		else if (source instanceof FileSystemResource) {
 			try {
 				Type type = ClassUtils.forName(definition.getBeanClassName(), null);
 				if (type instanceof ParameterizedType) {
-					Type typeArgumentAtIndex = ((ParameterizedType) type)
-							.getActualTypeArguments()[index];
-					if (typeArgumentAtIndex instanceof ParameterizedType) {
-						param = ((ParameterizedType) typeArgumentAtIndex)
-								.getActualTypeArguments()[0];
-					}
-					else {
-						param = typeArgumentAtIndex;
-					}
+					return ((ParameterizedType) type).getActualTypeArguments();
 				}
 				else {
-					param = type;
+					throw new IllegalStateException(
+							"Types for bean are not parameterized: " + definition);
 				}
 			}
 			catch (ClassNotFoundException e) {
@@ -129,14 +139,11 @@ class ContextFunctionPostProcessor
 		else {
 			ResolvableType resolvable = (ResolvableType) getField(definition,
 					"targetType");
-			param = resolvable.getGeneric(index).getGeneric(0).getType();
+			return Stream.of(resolvable.getGenerics())
+					.map(type -> type.getGeneric(0).getType())
+					.collect(Collectors.toList()).toArray(new Type[0]);
 		}
-		if (param instanceof ParameterizedType) {
-			ParameterizedType concrete = (ParameterizedType) param;
-			param = concrete.getRawType();
-		}
-		return ClassUtils.resolveClassName(param.getTypeName(),
-				registry.getClass().getClassLoader());
+
 	}
 
 	private Object getField(Object target, String name) {
@@ -208,23 +215,15 @@ class ContextFunctionPostProcessor
 	private Boolean hasFluxTypes(String name, int numTypes) {
 		if (this.registry.containsBeanDefinition(name)) {
 			BeanDefinition beanDefinition = this.registry.getBeanDefinition(name);
-			Object source = beanDefinition.getSource();
-			if (source instanceof StandardMethodMetadata) {
-				StandardMethodMetadata metadata = (StandardMethodMetadata) source;
-				Type returnType = metadata.getIntrospectedMethod().getGenericReturnType();
-				if (returnType instanceof ParameterizedType) {
-					Type[] types = ((ParameterizedType) returnType)
-							.getActualTypeArguments();
-					if (types != null && types.length == numTypes) {
-						String fluxClassName = Flux.class.getName();
-						for (Type t : types) {
-							if (!(t.getTypeName().startsWith(fluxClassName))) {
-								return false;
-							}
-						}
-						return true;
+			Type[] types = findTypes((AbstractBeanDefinition) beanDefinition);
+			if (types != null && types.length == numTypes) {
+				String fluxClassName = Flux.class.getName();
+				for (Type t : types) {
+					if (!(t.getTypeName().startsWith(fluxClassName))) {
+						return false;
 					}
 				}
+				return true;
 			}
 		}
 		return null;

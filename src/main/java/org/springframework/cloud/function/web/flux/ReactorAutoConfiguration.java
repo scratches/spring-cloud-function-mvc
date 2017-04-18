@@ -47,6 +47,11 @@ public class ReactorAutoConfiguration {
 	@Autowired
 	private ApplicationContext context;
 
+	@Bean
+	public FunctionHandlerMapping functionHandlerMapping() {
+		return new FunctionHandlerMapping(context);
+	}
+
 	@Configuration
 	protected static class FluxMessageConverterConfiguration {
 
@@ -57,7 +62,7 @@ public class ReactorAutoConfiguration {
 		}
 
 	}
-	
+
 	@Bean
 	public BeanPostProcessor fluxRequestMappingHandlerAdapterProcessor() {
 		return new BeanPostProcessor() {
@@ -66,8 +71,10 @@ public class ReactorAutoConfiguration {
 					throws BeansException {
 				if (bean instanceof RequestMappingHandlerAdapter) {
 					RequestMappingHandlerAdapter adapter = (RequestMappingHandlerAdapter) bean;
-					List<HandlerMethodArgumentResolver> resolvers = new ArrayList<>(adapter.getArgumentResolvers());
-					resolvers.add(0,context.getBean(FluxHandlerMethodArgumentResolver.class)); 
+					List<HandlerMethodArgumentResolver> resolvers = new ArrayList<>(
+							adapter.getArgumentResolvers());
+					resolvers.add(0,
+							context.getBean(FluxHandlerMethodArgumentResolver.class));
 					adapter.setArgumentResolvers(resolvers);
 				}
 				return bean;
