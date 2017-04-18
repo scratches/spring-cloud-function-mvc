@@ -127,6 +127,9 @@ public class FunctionHandlerMapping extends RequestMappingHandlerMapping {
 	protected HandlerMethod lookupHandlerMethod(String lookupPath,
 			HttpServletRequest request) throws Exception {
 		HandlerMethod method = super.lookupHandlerMethod(lookupPath, request);
+		if (method==null) {
+			return null;
+		}
 		request.setAttribute(HANDLER, method.getBean());
 		return method;
 	}
