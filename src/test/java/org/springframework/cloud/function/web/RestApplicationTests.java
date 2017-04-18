@@ -184,7 +184,7 @@ public class RestApplicationTests {
 						String.class);
 		assertThat(result.getBody()).isEqualTo("[[\"go\",\"home\"],[\"come\",\"back\"]]");
 		assertThat(result.getHeaders().getContentType())
-				.isEqualTo(MediaType.APPLICATION_JSON);
+				.isGreaterThanOrEqualTo(MediaType.APPLICATION_JSON);
 	}
 
 	@Test
@@ -224,8 +224,8 @@ public class RestApplicationTests {
 
 	@Test
 	public void postMore() {
-		assertThat(rest.postForObject("/post/more", "foo\nbar", String.class))
-				.isEqualTo("[FOO][BAR]");
+		assertThat(rest.postForObject("/post/more", "[\"foo\",\"bar\"]", String.class))
+				.isEqualTo("[\"[FOO]\",\"[BAR]\"]");
 	}
 
 	@Test
@@ -264,7 +264,7 @@ public class RestApplicationTests {
 						// The new line in the middle is optional
 						.body("[{\"value\":\"foo\"},\n{\"value\":\"bar\"}]"),
 				String.class).getBody())
-						.isEqualTo("{\"value\":\"FOO\"}{\"value\":\"BAR\"}");
+						.isEqualTo("[{\"value\":\"FOO\"},{\"value\":\"BAR\"}]");
 	}
 
 	@Test
