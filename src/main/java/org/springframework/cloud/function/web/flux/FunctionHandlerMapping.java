@@ -175,6 +175,7 @@ public class FunctionHandlerMapping extends RequestMappingHandlerMapping {
 		}
 
 		@PostMapping
+		@ResponseBody
 		public ResponseEntity<List<?>> accept(@RequestBody FluxRequest<?> input) {
 			handler().accept(input.flux());
 			return ResponseEntity.accepted().body(input.body());

@@ -58,7 +58,7 @@ import reactor.core.publisher.Flux;
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class RestApplicationTests {
 
-	private static final MediaType EVENT_STREAM = MediaType.valueOf("text/event-stream");
+	private static final MediaType EVENT_STREAM = MediaType.TEXT_EVENT_STREAM;
 	@LocalServerPort
 	private int port;
 	@Autowired
@@ -268,24 +268,11 @@ public class RestApplicationTests {
 	}
 
 	@Test
-	public void uppercaseJsonStream() throws Exception {
-		assertThat(
-				rest.exchange(
-						RequestEntity.post(new URI("/maps"))
-								.contentType(MediaType.APPLICATION_JSON)
-								// TODO: make this work without newline separator
-								.body("{\"value\":\"foo\"}\n{\"value\":\"bar\"}"),
-						String.class).getBody())
-								.isEqualTo("{\"value\":\"FOO\"}{\"value\":\"BAR\"}");
-	}
-
-	@Test
 	public void uppercaseSSE() throws Exception {
-		assertThat(
-				rest.exchange(
-						RequestEntity.post(new URI("/uppercase")).accept(EVENT_STREAM)
-								.contentType(EVENT_STREAM).body(sse("foo", "bar")),
-						String.class).getBody()).isEqualTo(sse("[FOO]", "[BAR]"));
+		assertThat(rest.exchange(RequestEntity.post(new URI("/uppercase"))
+				.accept(EVENT_STREAM).contentType(MediaType.APPLICATION_JSON)
+				.body("[\"foo\",\"bar\"]"), String.class).getBody())
+						.isEqualTo(sse("[FOO]", "[BAR]"));
 	}
 
 	private String sse(String... values) {
