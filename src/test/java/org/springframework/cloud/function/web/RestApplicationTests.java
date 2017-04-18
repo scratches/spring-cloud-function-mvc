@@ -109,6 +109,14 @@ public class RestApplicationTests {
 	}
 
 	@Test
+	public void foos() throws Exception {
+		ResponseEntity<String> result = rest
+				.exchange(RequestEntity.get(new URI("/foos")).build(), String.class);
+		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(result.getBody()).isEqualTo("[{\"value\":\"foo\"},{\"value\":\"bar\"}]");
+	}
+
+	@Test
 	public void getMore() throws Exception {
 		ResponseEntity<String> result = rest
 				.exchange(RequestEntity.get(new URI("/get/more")).build(), String.class);
@@ -132,6 +140,16 @@ public class RestApplicationTests {
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
 		assertThat(test.list).hasSize(2);
 		assertThat(result.getBody()).isEqualTo("[\"one\",\"two\"]");
+	}
+
+	@Test
+	public void addFoos() throws Exception {
+		ResponseEntity<String> result = rest.exchange(RequestEntity
+				.post(new URI("/addFoos")).contentType(MediaType.APPLICATION_JSON)
+				.body("[{\"value\":\"foo\"},{\"value\":\"bar\"}]"), String.class);
+		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+		assertThat(test.list).hasSize(2);
+		assertThat(result.getBody()).isEqualTo("[{\"value\":\"foo\"},{\"value\":\"bar\"}]");
 	}
 
 	@Test
@@ -204,6 +222,14 @@ public class RestApplicationTests {
 				.post(new URI("/uppercase")).contentType(MediaType.APPLICATION_JSON)
 				.body("[\"foo\",\"bar\"]"), String.class);
 		assertThat(result.getBody()).isEqualTo("[\"[FOO]\",\"[BAR]\"]");
+	}
+
+	@Test
+	public void uppercaseFoos() throws Exception {
+		ResponseEntity<String> result = rest.exchange(RequestEntity
+				.post(new URI("/upFoos")).contentType(MediaType.APPLICATION_JSON)
+				.body("[{\"value\":\"foo\"},{\"value\":\"bar\"}]"), String.class);
+		assertThat(result.getBody()).isEqualTo("[{\"value\":\"FOO\"},{\"value\":\"BAR\"}]");
 	}
 
 	@Test
@@ -297,6 +323,12 @@ public class RestApplicationTests {
 		}
 
 		@Bean
+		public Function<Flux<Foo>, Flux<Foo>> upFoos() {
+			return flux -> flux.log()
+					.map(value -> new Foo(value.getValue().trim().toUpperCase()));
+		}
+
+		@Bean
 		public Function<Flux<Integer>, Flux<String>> wrap() {
 			return flux -> flux.log().map(value -> ".." + value + "..");
 		}
@@ -317,7 +349,12 @@ public class RestApplicationTests {
 
 		@Bean({ "words", "get/more" })
 		public Supplier<Flux<String>> words() {
-			return () -> Flux.fromArray(new String[] { "foo", "bar" });
+			return () -> Flux.just("foo", "bar");
+		}
+
+		@Bean
+		public Supplier<Flux<Foo>> foos() {
+			return () -> Flux.just(new Foo("foo"), new Foo("bar"));
 		}
 
 		@Bean
@@ -328,6 +365,11 @@ public class RestApplicationTests {
 		@Bean
 		public Consumer<Flux<String>> updates() {
 			return flux -> flux.subscribe(value -> list.add(value));
+		}
+
+		@Bean
+		public Consumer<Flux<Foo>> addFoos() {
+			return flux -> flux.subscribe(value -> list.add(value.getValue()));
 		}
 
 		@Bean
@@ -373,6 +415,25 @@ public class RestApplicationTests {
 					Arrays.asList("come", "back"));
 		}
 
+	}
+
+	public static class Foo {
+		private String value;
+
+		public Foo(String value) {
+			this.value = value;
+		}
+
+		Foo() {
+		}
+
+		public String getValue() {
+			return value;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
 	}
 
 }
