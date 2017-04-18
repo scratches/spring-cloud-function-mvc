@@ -30,12 +30,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.ClassUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
@@ -167,8 +170,9 @@ public class FunctionHandlerMapping extends RequestMappingHandlerMapping {
 		}
 
 		@PostMapping
-		public void accept(@RequestBody FluxRequest<?> input) {
+		public ResponseEntity<List<?>> accept(@RequestBody FluxRequest<?> input) {
 			handler().accept(input.flux());
+			return ResponseEntity.accepted().body(input.body());
 		}
 	}
 	

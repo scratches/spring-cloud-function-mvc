@@ -36,6 +36,10 @@ public class FluxRequest<T> {
 		return Flux.fromIterable(body);
 	}
 	
+	public List<T> body() {
+		return body;
+	}
+	
 }
 
 
