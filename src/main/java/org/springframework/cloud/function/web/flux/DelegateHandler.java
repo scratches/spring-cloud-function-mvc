@@ -17,17 +17,20 @@
 package org.springframework.cloud.function.web.flux;
 
 import org.springframework.beans.factory.ListableBeanFactory;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.util.StringUtils;
 
 abstract class DelegateHandler<T> {
 	private T handler;
-	private ListableBeanFactory factory;
+	private final ListableBeanFactory factory;
 	private ContextFunctionPostProcessor processor;
-	private Object source;
+	private final Object source;
+	private final ConversionService conversionService;
 
 	public DelegateHandler(ListableBeanFactory factory, Object source) {
 		this.factory = factory;
 		this.source = source;
+		conversionService = factory.getBean(ConversionService.class);
 	}
 
 	public String[] getNames() {
@@ -40,11 +43,15 @@ abstract class DelegateHandler<T> {
 		}
 	}
 
+	public Object convert(String input) {
+		return conversionService.convert(input, type());
+	}
+
 	public Class<?> type() {
 		if (processor == null) {
 			processor = factory.getBean(ContextFunctionPostProcessor.class);
 		}
-		return processor.findInputType(handler());
+		return (Class<?>) processor.findInputType(handler());
 	}
 
 	@SuppressWarnings("unchecked")

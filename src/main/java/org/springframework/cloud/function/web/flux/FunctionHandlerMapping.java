@@ -30,7 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ClassUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,7 +37,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
@@ -54,7 +52,8 @@ import reactor.core.publisher.Mono;
 @ConditionalOnClass(RequestMappingHandlerMapping.class)
 public class FunctionHandlerMapping extends RequestMappingHandlerMapping {
 
-	public static final String HANDLER = FunctionHandlerMapping.class.getName() + ".HANDLER";
+	public static final String HANDLER = FunctionHandlerMapping.class.getName()
+			+ ".HANDLER";
 	@Value("${spring.cloud.function.web.path:}")
 	private String prefix = "";
 	private ListableBeanFactory beanFactory;
@@ -107,7 +106,7 @@ public class FunctionHandlerMapping extends RequestMappingHandlerMapping {
 		Object delegate = createDelegate(userType, handler);
 		super.detectHandlerMethods(delegate);
 	}
-	
+
 	@Override
 	protected void registerHandlerMethod(Object handler, Method method,
 			RequestMappingInfo mapping) {
@@ -119,15 +118,16 @@ public class FunctionHandlerMapping extends RequestMappingHandlerMapping {
 			}
 			paths.add(prefix + "/" + name);
 		}
-		mapping = mapping.combine(RequestMappingInfo.paths(paths.toArray(new String[0])).build());
+		mapping = mapping
+				.combine(RequestMappingInfo.paths(paths.toArray(new String[0])).build());
 		super.registerHandlerMethod(handler, method, mapping);
 	}
-	
+
 	@Override
 	protected HandlerMethod lookupHandlerMethod(String lookupPath,
 			HttpServletRequest request) throws Exception {
 		HandlerMethod method = super.lookupHandlerMethod(lookupPath, request);
-		if (method==null) {
+		if (method == null) {
 			return null;
 		}
 		request.setAttribute(HANDLER, method.getBean());
@@ -146,7 +146,8 @@ public class FunctionHandlerMapping extends RequestMappingHandlerMapping {
 		}
 	}
 
-	public static class FunctionDelegate extends DelegateHandler<Function<Flux<?>, Flux<?>>> {
+	public static class FunctionDelegate
+			extends DelegateHandler<Function<Flux<?>, Flux<?>>> {
 
 		public FunctionDelegate(ListableBeanFactory factory, Object source) {
 			super(factory, source);
@@ -161,7 +162,8 @@ public class FunctionHandlerMapping extends RequestMappingHandlerMapping {
 		@GetMapping
 		@ResponseBody
 		public Mono<?> single(@PathVariable String input) {
-			return Mono.from(handler().apply(Flux.just(input)));
+			Object converted = convert(input);
+			return Mono.from(handler().apply(Flux.just(converted)));
 		}
 
 	}
@@ -178,5 +180,5 @@ public class FunctionHandlerMapping extends RequestMappingHandlerMapping {
 			return ResponseEntity.accepted().body(input.body());
 		}
 	}
-	
+
 }
