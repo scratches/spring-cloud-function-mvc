@@ -26,11 +26,16 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
+import org.springframework.cloud.function.support.FluxConsumer;
+import org.springframework.cloud.function.support.FluxFunction;
+import org.springframework.cloud.function.support.FluxSupplier;
+import org.springframework.cloud.function.support.FunctionUtils;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.type.StandardMethodMetadata;
@@ -38,13 +43,19 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
+import reactor.core.publisher.Flux;
+
 @Component
 class ContextFunctionPostProcessor
 		implements BeanPostProcessor, BeanDefinitionRegistryPostProcessor {
 
 	private Map<Object, String> functions = new HashMap<>();
 
+	private Map<Object, Object> handlers = new HashMap<>();
+
 	private BeanDefinitionRegistry registry;
+
+	private ConfigurableListableBeanFactory factory;
 
 	@Override
 	public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) {
@@ -54,6 +65,7 @@ class ContextFunctionPostProcessor
 	@Override
 	public void postProcessBeanFactory(ConfigurableListableBeanFactory factory)
 			throws BeansException {
+		this.factory = factory;
 	}
 
 	@Override
@@ -149,4 +161,72 @@ class ContextFunctionPostProcessor
 		return null;
 	}
 
+	@SuppressWarnings({ "unchecked" })
+	public <T> T handler(Object source) {
+		if (!handlers.containsKey(source)) {
+			T handler;
+			if (source instanceof String) {
+				handler = (T) factory.getBean((String) source);
+			}
+			else {
+				handler = (T) source;
+			}
+			String name = functions.get(handler);
+			if (handler instanceof Function
+					&& !isFluxFunction(name, (Function<?, ?>) handler)) {
+				handler = (T) new FluxFunction<Object, Object>(
+						(Function<Object, Object>) handler);
+			}
+			else if (handler instanceof Consumer
+					&& !isFluxConsumer(name, (Consumer<?>) handler)) {
+				handler = (T) new FluxConsumer<Object>((Consumer<Object>) handler);
+			}
+			else if (handler instanceof Supplier
+					&& !isFluxSupplier(name, (Supplier<?>) handler)) {
+				handler = (T) new FluxSupplier<Object>((Supplier<Object>) handler);
+			}
+			handlers.put(source, handler);
+		}
+		return (T) handlers.get(source);
+	}
+
+	private boolean isFluxFunction(String name, Function<?, ?> function) {
+		Boolean fluxTypes = this.hasFluxTypes(name, 2);
+		return (fluxTypes != null) ? fluxTypes : FunctionUtils.isFluxFunction(function);
+	}
+
+	private boolean isFluxConsumer(String name, Consumer<?> consumer) {
+		Boolean fluxTypes = this.hasFluxTypes(name, 1);
+		return (fluxTypes != null) ? fluxTypes : FunctionUtils.isFluxConsumer(consumer);
+	}
+
+	private boolean isFluxSupplier(String name, Supplier<?> supplier) {
+		Boolean fluxTypes = this.hasFluxTypes(name, 1);
+		return (fluxTypes != null) ? fluxTypes : FunctionUtils.isFluxSupplier(supplier);
+	}
+
+	private Boolean hasFluxTypes(String name, int numTypes) {
+		if (this.registry.containsBeanDefinition(name)) {
+			BeanDefinition beanDefinition = this.registry.getBeanDefinition(name);
+			Object source = beanDefinition.getSource();
+			if (source instanceof StandardMethodMetadata) {
+				StandardMethodMetadata metadata = (StandardMethodMetadata) source;
+				Type returnType = metadata.getIntrospectedMethod().getGenericReturnType();
+				if (returnType instanceof ParameterizedType) {
+					Type[] types = ((ParameterizedType) returnType)
+							.getActualTypeArguments();
+					if (types != null && types.length == numTypes) {
+						String fluxClassName = Flux.class.getName();
+						for (Type t : types) {
+							if (!(t.getTypeName().startsWith(fluxClassName))) {
+								return false;
+							}
+						}
+						return true;
+					}
+				}
+			}
+		}
+		return null;
+	}
 }

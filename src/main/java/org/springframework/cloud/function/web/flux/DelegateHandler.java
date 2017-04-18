@@ -21,7 +21,6 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.util.StringUtils;
 
 abstract class DelegateHandler<T> {
-	private T handler;
 	private final ListableBeanFactory factory;
 	private ContextFunctionPostProcessor processor;
 	private final Object source;
@@ -30,7 +29,7 @@ abstract class DelegateHandler<T> {
 	public DelegateHandler(ListableBeanFactory factory, Object source) {
 		this.factory = factory;
 		this.source = source;
-		conversionService = factory.getBean(ConversionService.class);
+		this.conversionService = factory.getBean(ConversionService.class);
 	}
 
 	public String[] getNames() {
@@ -48,23 +47,18 @@ abstract class DelegateHandler<T> {
 	}
 
 	public Class<?> type() {
+		return (Class<?>) processor().findInputType(handler());
+	}
+
+	public T handler() {
+		return processor().handler(source);
+	}
+
+	private ContextFunctionPostProcessor processor() {
 		if (processor == null) {
 			processor = factory.getBean(ContextFunctionPostProcessor.class);
 		}
-		return (Class<?>) processor.findInputType(handler());
+		return processor;
 	}
-
-	@SuppressWarnings("unchecked")
-	public T handler() {
-		if (handler == null) {
-			if (source instanceof String) {
-				handler = (T) factory.getBean((String) source);
-			}
-			else {
-				handler = (T) source;
-			}
-		}
-		return handler;
-	}
-
+	
 }
