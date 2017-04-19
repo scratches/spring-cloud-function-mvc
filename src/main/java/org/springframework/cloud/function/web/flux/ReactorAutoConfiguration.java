@@ -25,12 +25,17 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.AsyncHandlerMethodReturnValueHandler;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.method.support.HandlerMethodReturnValueHandler;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 
 import reactor.core.publisher.Flux;
@@ -50,6 +55,19 @@ public class ReactorAutoConfiguration {
 	@Bean
 	public FunctionHandlerMapping functionHandlerMapping() {
 		return new FunctionHandlerMapping(context);
+	}
+
+	@Bean
+	@ConditionalOnMissingClass("org.springframework.core.ReactiveAdapter")
+	public WebMvcConfigurer fluxReturnValueConfigurer(HttpMessageConverters converters) {
+		return new WebMvcConfigurerAdapter() {
+			@Override
+			public void addReturnValueHandlers(
+					List<HandlerMethodReturnValueHandler> returnValueHandlers) {
+				returnValueHandlers
+						.add(new FluxReturnValueHandler(converters.getConverters()));
+			}
+		};
 	}
 
 	@Configuration
@@ -77,6 +95,12 @@ public class ReactorAutoConfiguration {
 							context.getBean(FluxHandlerMethodArgumentResolver.class));
 					adapter.setArgumentResolvers(resolvers);
 				}
+				return bean;
+			}
+
+			@Override
+			public Object postProcessBeforeInitialization(Object bean, String beanName)
+					throws BeansException {
 				return bean;
 			}
 		};

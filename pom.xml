@@ -3,7 +3,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>spring-cloud-function-web</artifactId>
+	<artifactId>spring-cloud-function-mvc</artifactId>
 	<packaging>jar</packaging>
 	<name>Spring Cloud Function Web Support</name>
 	<description>Spring Cloud Function Web Support</description>
@@ -12,12 +12,8 @@
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-function-parent</artifactId>
 		<version>1.0.0.BUILD-SNAPSHOT</version>
+		<relativePath/>
 	</parent>
-
-	<properties>
-		<spring.version>5.0.0.BUILD-SNAPSHOT</spring.version>
-		<jackson.version>2.9.0.pr2</jackson.version>
-	</properties>
 
 	<dependencies>
 		<dependency>
@@ -36,32 +32,9 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
-
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-core</artifactId>
-				<version>${spring.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.fasterxml.jackson</groupId>
-				<artifactId>jackson-bom</artifactId>
-				<version>${jackson.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-framework-bom</artifactId>
-				<version>${spring.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
 
 	<build>
 		<plugins>

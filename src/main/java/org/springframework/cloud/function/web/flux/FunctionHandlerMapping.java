@@ -134,20 +134,20 @@ public class FunctionHandlerMapping extends RequestMappingHandlerMapping {
 		return method;
 	}
 
-	public static class SupplierDelegate extends DelegateHandler<Supplier<Flux<?>>> {
+	public static class SupplierDelegate extends DelegateHandler<Supplier<Flux<Object>>> {
 		public SupplierDelegate(ListableBeanFactory factory, Object source) {
 			super(factory, source);
 		}
 
 		@GetMapping
 		@ResponseBody
-		public Flux<?> get() {
+		public Flux<Object> get() {
 			return handler().get();
 		}
 	}
 
 	public static class FunctionDelegate
-			extends DelegateHandler<Function<Flux<?>, Flux<?>>> {
+			extends DelegateHandler<Function<Flux<Object>, Flux<Object>>> {
 
 		public FunctionDelegate(ListableBeanFactory factory, Object source) {
 			super(factory, source);
@@ -155,20 +155,20 @@ public class FunctionHandlerMapping extends RequestMappingHandlerMapping {
 
 		@PostMapping
 		@ResponseBody
-		public Flux<?> apply(@RequestBody FluxRequest<?> input) {
+		public Flux<Object> apply(@RequestBody FluxRequest<Object> input) {
 			return handler().apply(input.flux());
 		}
 
 		@GetMapping
 		@ResponseBody
-		public Mono<?> single(@PathVariable String input) {
+		public Mono<Object> single(@PathVariable String input) {
 			Object converted = convert(input);
 			return Mono.from(handler().apply(Flux.just(converted)));
 		}
 
 	}
 
-	public static class ConsumerDelegate extends DelegateHandler<Consumer<Flux<?>>> {
+	public static class ConsumerDelegate extends DelegateHandler<Consumer<Flux<Object>>> {
 
 		public ConsumerDelegate(ListableBeanFactory factory, Object source) {
 			super(factory, source);
@@ -176,7 +176,7 @@ public class FunctionHandlerMapping extends RequestMappingHandlerMapping {
 
 		@PostMapping
 		@ResponseBody
-		public ResponseEntity<List<?>> accept(@RequestBody FluxRequest<?> input) {
+		public ResponseEntity<List<Object>> accept(@RequestBody FluxRequest<Object> input) {
 			handler().accept(input.flux());
 			return ResponseEntity.accepted().body(input.body());
 		}
