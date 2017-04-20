@@ -104,7 +104,7 @@ public class RestApplicationTests {
 		ResponseEntity<String> result = rest
 				.exchange(RequestEntity.get(new URI("/words")).build(), String.class);
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-		assertThat(result.getBody()).isEqualTo("foobar");
+		assertThat(result.getBody()).isEqualTo("[\"foo\",\"bar\"]");
 	}
 
 	@Test
@@ -121,7 +121,7 @@ public class RestApplicationTests {
 		ResponseEntity<String> result = rest
 				.exchange(RequestEntity.get(new URI("/get/more")).build(), String.class);
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-		assertThat(result.getBody()).isEqualTo("foobar");
+		assertThat(result.getBody()).isEqualTo("[\"foo\",\"bar\"]");
 	}
 
 	@Test
@@ -315,7 +315,7 @@ public class RestApplicationTests {
 		}
 
 		@GetMapping({ "/words", "/get/more" })
-		public Flux<String> words() {
+		public Flux<Object> words() {
 			return Flux.fromArray(new String[] { "foo", "bar" });
 		}
 
