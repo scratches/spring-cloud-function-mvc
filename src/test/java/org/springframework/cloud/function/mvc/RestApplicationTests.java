@@ -156,10 +156,9 @@ public class RestApplicationTests {
 
 	@Test
 	public void timeout() throws Exception {
-		// Fails in Spring 4.3 because of difference in opinion about single valued Flux
 		assertThat(rest
 				.exchange(RequestEntity.get(new URI("/timeout")).build(), String.class)
-				.getBody()).isEqualTo("foo");
+				.getBody()).isEqualTo("[\"foo\"]");
 	}
 
 	@Test
