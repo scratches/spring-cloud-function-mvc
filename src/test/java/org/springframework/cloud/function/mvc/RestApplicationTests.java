@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package test;
+package org.springframework.cloud.function.mvc;
 
 import java.net.URI;
 import java.time.Duration;
@@ -34,6 +34,7 @@ import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.cloud.function.mvc.RestApplicationTests.TestConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -52,7 +53,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import test.RestApplicationTests.TestConfiguration;
 
 /**
  * @author Dave Syer
@@ -108,6 +108,15 @@ public class RestApplicationTests {
 	}
 
 	@Test
+	public void foos() throws Exception {
+		ResponseEntity<String> result = rest
+				.exchange(RequestEntity.get(new URI("/foos")).build(), String.class);
+		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(result.getBody())
+				.isEqualTo("[{\"value\":\"foo\"},{\"value\":\"bar\"}]");
+	}
+
+	@Test
 	public void getMore() throws Exception {
 		ResponseEntity<String> result = rest
 				.exchange(RequestEntity.get(new URI("/get/more")).build(), String.class);
@@ -132,6 +141,16 @@ public class RestApplicationTests {
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
 		assertThat(test.list).hasSize(2);
 		assertThat(result.getBody()).isEqualTo("[\"one\",\"two\"]");
+	}
+
+	@Test
+	public void addFoos() throws Exception {
+		ResponseEntity<String> result = rest.exchange(RequestEntity
+				.post(new URI("/addFoos")).contentType(MediaType.APPLICATION_JSON)
+				.body("[{\"value\":\"foo\"},{\"value\":\"bar\"}]"), String.class);
+		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+		assertThat(test.list).hasSize(2);
+		assertThat(result.getBody()).isEqualTo("[{\"value\":\"foo\"},{\"value\":\"bar\"}]");
 	}
 
 	@Test
@@ -185,6 +204,14 @@ public class RestApplicationTests {
 	}
 
 	@Test
+	public void uppercaseFoos() throws Exception {
+		ResponseEntity<String> result = rest.exchange(RequestEntity
+				.post(new URI("/upFoos")).contentType(MediaType.APPLICATION_JSON)
+				.body("[{\"value\":\"foo\"},{\"value\":\"bar\"}]"), String.class);
+		assertThat(result.getBody()).isEqualTo("[{\"value\":\"FOO\"},{\"value\":\"BAR\"}]");
+	}
+
+	@Test
 	public void transform() throws Exception {
 		ResponseEntity<String> result = rest.exchange(RequestEntity
 				.post(new URI("/transform")).contentType(MediaType.APPLICATION_JSON)
@@ -218,13 +245,11 @@ public class RestApplicationTests {
 
 	@Test
 	public void uppercaseJsonStream() throws Exception {
-		assertThat(
-				rest.exchange(
-						RequestEntity.post(new URI("/maps"))
-								.contentType(MediaType.APPLICATION_JSON)
-								.body("[{\"value\":\"foo\"},{\"value\":\"bar\"}]"),
-						String.class).getBody())
-								.isEqualTo("{\"value\":\"FOO\"}{\"value\":\"BAR\"}");
+		assertThat(rest
+				.exchange(RequestEntity.post(new URI("/maps"))
+						.contentType(MediaType.APPLICATION_JSON)
+						.body("[{\"value\":\"foo\"},{\"value\":\"bar\"}]"), String.class)
+				.getBody()).isEqualTo("[{\"value\":\"FOO\"},{\"value\":\"BAR\"}]");
 	}
 
 	@Test
@@ -253,6 +278,12 @@ public class RestApplicationTests {
 					.map(value -> "[" + value.trim().toUpperCase() + "]");
 		}
 
+		@PostMapping("/upFoos")
+		public Flux<Foo> upFoos(@RequestBody List<Foo> list) {
+			return Flux.fromIterable(list).log()
+					.map(value -> new Foo(value.getValue().trim().toUpperCase()));
+		}
+
 		@GetMapping("/uppercase/{id}")
 		public Mono<String> uppercaseGet(@PathVariable String id) {
 			return Mono.just(id).map(value -> "[" + value.trim().toUpperCase() + "]");
@@ -270,7 +301,8 @@ public class RestApplicationTests {
 
 		@GetMapping("/entity/{id}")
 		public Flux<Map<String, Object>> entity(@PathVariable Integer id) {
-			return Flux.just(id).log().map(value -> Collections.singletonMap("value", value));
+			return Flux.just(id).log()
+					.map(value -> Collections.singletonMap("value", value));
 		}
 
 		@PostMapping("/maps")
@@ -287,11 +319,24 @@ public class RestApplicationTests {
 			return Flux.fromArray(new String[] { "foo", "bar" });
 		}
 
+		@GetMapping("/foos")
+		public Flux<Foo> foos() {
+			return Flux.just(new Foo("foo"), new Foo("bar"));
+		}
+
 		@PostMapping("/updates")
 		@ResponseStatus(HttpStatus.ACCEPTED)
 		public Flux<?> updates(@RequestBody List<String> list) {
 			Flux<String> flux = Flux.fromIterable(list).cache();
 			flux.subscribe(value -> this.list.add(value));
+			return flux;
+		}
+
+		@PostMapping("/addFoos")
+		@ResponseStatus(HttpStatus.ACCEPTED)
+		public Flux<Foo> addFoos(@RequestBody List<Foo> list) {
+			Flux<Foo> flux = Flux.fromIterable(list).cache();
+			flux.subscribe(value -> this.list.add(value.getValue()));
 			return flux;
 		}
 
@@ -324,4 +369,22 @@ public class RestApplicationTests {
 
 	}
 
+	public static class Foo {
+		private String value;
+
+		public Foo(String value) {
+			this.value = value;
+		}
+
+		Foo() {
+		}
+
+		public String getValue() {
+			return value;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+	}
 }
