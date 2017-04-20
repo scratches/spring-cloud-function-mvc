@@ -287,7 +287,7 @@ public class RestApplicationTests {
 		}
 
 		@GetMapping("/uppercase/{id}")
-		public Mono<String> uppercaseGet(@PathVariable String id) {
+		public Mono<?> uppercaseGet(@PathVariable String id) {
 			return Mono.just(id).map(value -> "[" + value.trim().toUpperCase() + "]");
 		}
 
@@ -297,13 +297,13 @@ public class RestApplicationTests {
 		}
 
 		@GetMapping("/wrap/{id}")
-		public Mono<String> wrapGet(@PathVariable int id) {
+		public Mono<?> wrapGet(@PathVariable int id) {
 			return Mono.just(id).log().map(value -> ".." + value + "..");
 		}
 
 		@GetMapping("/entity/{id}")
-		public Flux<Map<String, Object>> entity(@PathVariable Integer id) {
-			return Flux.just(id).log()
+		public Mono<Map<String, Object>> entity(@PathVariable Integer id) {
+			return Mono.just(id).log()
 					.map(value -> Collections.singletonMap("value", value));
 		}
 

@@ -82,7 +82,7 @@ class ResponseBodyEmitterSubscriber<T> implements Subscriber<T> {
 				else {
 					responseBodyEmitter.send(",");
 				}
-				if (value.getClass() == String.class
+				if (!single && value.getClass() == String.class
 						&& !((String) value).contains("\"")) {
 					object = "\"" + value + "\"";
 				}
