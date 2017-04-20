@@ -274,7 +274,6 @@ public class RestApplicationTests {
 		private List<String> list = new ArrayList<>();
 
 		@PostMapping({ "/uppercase", "/transform", "/post/more" })
-		// TODO: SPR-15465 different if you return Flux<String>
 		public Flux<?> uppercase(@RequestBody List<String> flux) {
 			return Flux.fromIterable(flux).log()
 					.map(value -> "[" + value.trim().toUpperCase() + "]");
@@ -292,7 +291,7 @@ public class RestApplicationTests {
 		}
 
 		@PostMapping("/wrap")
-		public Flux<String> wrap(@RequestBody Flux<Integer> flux) {
+		public Flux<?> wrap(@RequestBody Flux<Integer> flux) {
 			return flux.log().map(value -> ".." + value + "..");
 		}
 
@@ -343,7 +342,7 @@ public class RestApplicationTests {
 		}
 
 		@GetMapping("/bang")
-		public Flux<String> bang() {
+		public Flux<?> bang() {
 			return Flux.fromArray(new String[] { "foo", "bar" }).map(value -> {
 				if (value.equals("bar")) {
 					throw new RuntimeException("Bar");
@@ -353,7 +352,7 @@ public class RestApplicationTests {
 		}
 
 		@GetMapping("/empty")
-		public Flux<String> empty() {
+		public Flux<?> empty() {
 			return Flux.fromIterable(Collections.emptyList());
 		}
 

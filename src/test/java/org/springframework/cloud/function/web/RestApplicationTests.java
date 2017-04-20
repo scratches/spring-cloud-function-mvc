@@ -181,7 +181,6 @@ public class RestApplicationTests {
 	}
 
 	@Test
-	// See SPR-15456
 	public void emptyJson() throws Exception {
 		assertThat(rest
 				.exchange(RequestEntity.get(new URI("/empty"))
