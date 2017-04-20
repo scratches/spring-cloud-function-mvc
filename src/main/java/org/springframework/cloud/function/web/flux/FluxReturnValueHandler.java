@@ -131,7 +131,8 @@ public class FluxReturnValueHandler implements AsyncHandlerMethodReturnValueHand
 				: Flux.from(flux).timeout(Duration.ofMillis(timeout), Flux.empty());
 		if (!MediaType.ALL.equals(mediaType)
 				&& EVENT_STREAM.isCompatibleWith(mediaType)) {
-			return new FluxResponseSseEmitter<>(mediaType, exported);
+			// TODO: more subtle content negotiation
+			return new FluxResponseSseEmitter<>(MediaType.APPLICATION_JSON, exported);
 		}
 		return new FluxResponseBodyEmitter<>(mediaType, exported);
 	}

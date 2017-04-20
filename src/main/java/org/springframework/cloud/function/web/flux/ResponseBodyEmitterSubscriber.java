@@ -49,11 +49,14 @@ class ResponseBodyEmitterSubscriber<T> implements Subscriber<T> {
 
 	private boolean single;
 
+	private boolean json;
+
 	public ResponseBodyEmitterSubscriber(MediaType mediaType, Publisher<T> observable,
-			ResponseBodyEmitter responseBodyEmitter) {
+			ResponseBodyEmitter responseBodyEmitter, boolean json) {
 
 		this.mediaType = mediaType;
 		this.responseBodyEmitter = responseBodyEmitter;
+		this.json = json;
 		this.responseBodyEmitter.onTimeout(new Timeout());
 		this.responseBodyEmitter.onCompletion(new Complete());
 		this.single = observable instanceof Mono;
@@ -148,7 +151,7 @@ class ResponseBodyEmitterSubscriber<T> implements Subscriber<T> {
 	}
 
 	private boolean isJson() {
-		return MediaType.APPLICATION_JSON.isCompatibleWith(mediaType);
+		return json;
 	}
 
 	class Complete implements Runnable {

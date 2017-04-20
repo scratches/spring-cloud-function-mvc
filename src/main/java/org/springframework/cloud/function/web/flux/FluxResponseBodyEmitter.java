@@ -41,7 +41,8 @@ class FluxResponseBodyEmitter<T> extends ResponseBodyEmitter {
 	public FluxResponseBodyEmitter(MediaType mediaType, Publisher<T> observable) {
 		super();
 		this.mediaType = mediaType;
-		new ResponseBodyEmitterSubscriber<>(mediaType, observable, this);
+		new ResponseBodyEmitterSubscriber<>(mediaType, observable, this,
+				MediaType.APPLICATION_JSON.isCompatibleWith(mediaType));
 	}
 
 	@Override
