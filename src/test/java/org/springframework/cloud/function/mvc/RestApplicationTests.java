@@ -151,7 +151,8 @@ public class RestApplicationTests {
 				.body("[{\"value\":\"foo\"},{\"value\":\"bar\"}]"), String.class);
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
 		assertThat(test.list).hasSize(2);
-		assertThat(result.getBody()).isEqualTo("[{\"value\":\"foo\"},{\"value\":\"bar\"}]");
+		assertThat(result.getBody())
+				.isEqualTo("[{\"value\":\"foo\"},{\"value\":\"bar\"}]");
 	}
 
 	@Test
@@ -209,7 +210,8 @@ public class RestApplicationTests {
 		ResponseEntity<String> result = rest.exchange(RequestEntity
 				.post(new URI("/upFoos")).contentType(MediaType.APPLICATION_JSON)
 				.body("[{\"value\":\"foo\"},{\"value\":\"bar\"}]"), String.class);
-		assertThat(result.getBody()).isEqualTo("[{\"value\":\"FOO\"},{\"value\":\"BAR\"}]");
+		assertThat(result.getBody())
+				.isEqualTo("[{\"value\":\"FOO\"},{\"value\":\"BAR\"}]");
 	}
 
 	@Test
@@ -221,10 +223,11 @@ public class RestApplicationTests {
 	}
 
 	@Test
-	public void postMore() {
-		// Works in the functional model, fails with regular MVC because it can't convert the request
-		assertThat(rest.postForObject("/post/more", "[\"foo\",\"bar\"]", String.class))
-				.isEqualTo("[\"[FOO]\",\"[BAR]\"]");
+	public void postMore() throws Exception {
+		ResponseEntity<String> result = rest.exchange(RequestEntity
+				.post(new URI("/post/more")).contentType(MediaType.APPLICATION_JSON)
+				.body("[\"foo\",\"bar\"]"), String.class);
+		assertThat(result.getBody()).isEqualTo("[\"[FOO]\",\"[BAR]\"]");
 	}
 
 	@Test

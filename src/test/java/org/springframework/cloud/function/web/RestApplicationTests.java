@@ -237,7 +237,8 @@ public class RestApplicationTests {
 	@Test
 	public void uppercaseFoos() throws Exception {
 		ResponseEntity<String> result = rest.exchange(RequestEntity
-				.post(new URI("/upFoos")).contentType(MediaType.APPLICATION_JSON)
+				// TODO: does not require a content type header, but the plain MVC version does
+				.post(new URI("/upFoos"))
 				.body("[{\"value\":\"foo\"},{\"value\":\"bar\"}]"), String.class);
 		assertThat(result.getBody()).isEqualTo("[{\"value\":\"FOO\"},{\"value\":\"BAR\"}]");
 	}
