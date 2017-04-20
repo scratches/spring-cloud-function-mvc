@@ -174,6 +174,7 @@ public class RestApplicationTests {
 
 	@Test
 	public void timeoutJson() throws Exception {
+		// Fails in Spring 4.3 because of difference in opinion about single valued Flux
 		assertThat(rest
 				.exchange(RequestEntity.get(new URI("/timeout"))
 						.accept(MediaType.APPLICATION_JSON).build(), String.class)
@@ -282,6 +283,7 @@ public class RestApplicationTests {
 
 	@Test
 	public void supplierFirst() {
+		// Fails in Spring 4.3 because of difference in opinion about single valued Flux
 		assertThat(rest.getForObject("/not/a/function", String.class)).isEqualTo("hello");
 	}
 

@@ -156,6 +156,7 @@ public class RestApplicationTests {
 
 	@Test
 	public void timeout() throws Exception {
+		// Fails in Spring 4.3 because of difference in opinion about single valued Flux
 		assertThat(rest
 				.exchange(RequestEntity.get(new URI("/timeout")).build(), String.class)
 				.getBody()).isEqualTo("foo");
@@ -222,7 +223,7 @@ public class RestApplicationTests {
 
 	@Test
 	public void postMore() {
-		// Works in the functional model, fails with regular MVC
+		// Works in the functional model, fails with regular MVC because it can't convert the request
 		assertThat(rest.postForObject("/post/more", "[\"foo\",\"bar\"]", String.class))
 				.isEqualTo("[\"[FOO]\",\"[BAR]\"]");
 	}
