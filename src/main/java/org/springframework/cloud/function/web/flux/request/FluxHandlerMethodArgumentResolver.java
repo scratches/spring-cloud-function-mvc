@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.function.web.flux;
+package org.springframework.cloud.function.web.flux.request;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,8 +36,11 @@ import org.springframework.web.method.support.ModelAndViewContainer;
  * @author Dave Syer
  *
  */
-class FluxHandlerMethodArgumentResolver
+public class FluxHandlerMethodArgumentResolver
 		implements HandlerMethodArgumentResolver, Ordered {
+
+	public static final String HANDLER = FluxHandlerMethodArgumentResolver.class.getName()
+			+ ".HANDLER";
 
 	private final ObjectMapper mapper;
 
@@ -54,8 +57,8 @@ class FluxHandlerMethodArgumentResolver
 	public Object resolveArgument(MethodParameter parameter,
 			ModelAndViewContainer mavContainer, NativeWebRequest webRequest,
 			WebDataBinderFactory binderFactory) throws Exception {
-		DelegateHandler<?> handler = (DelegateHandler<?>) webRequest.getAttribute(
-				FunctionHandlerMapping.HANDLER, NativeWebRequest.SCOPE_REQUEST);
+		DelegateHandler<?> handler = (DelegateHandler<?>) webRequest.getAttribute(HANDLER,
+				NativeWebRequest.SCOPE_REQUEST);
 		Class<?> type = handler.type();
 		if (type == null) {
 			type = Object.class;

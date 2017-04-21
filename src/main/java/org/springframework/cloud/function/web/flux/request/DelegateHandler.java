@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.function.web.flux;
+package org.springframework.cloud.function.web.flux.request;
 
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.util.StringUtils;
 
-abstract class DelegateHandler<T> {
+public abstract class DelegateHandler<T> {
 	private final ListableBeanFactory factory;
 	private ContextFunctionPostProcessor processor;
 	private final Object source;

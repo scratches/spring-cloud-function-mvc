@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.function.web.flux;
+package org.springframework.cloud.function.web.flux.response;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;

@@ -28,6 +28,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
+import org.springframework.cloud.function.web.flux.request.FluxHandlerMethodArgumentResolver;
+import org.springframework.cloud.function.web.flux.response.FluxReturnValueHandler;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,7 +48,7 @@ import reactor.core.publisher.Flux;
 @Configuration
 @ConditionalOnWebApplication
 @ConditionalOnClass({ Flux.class, AsyncHandlerMethodReturnValueHandler.class })
-public class ReactorAutoConfiguration {
+public class FunctionReactorAutoConfiguration {
 
 	@Autowired
 	private ApplicationContext context;

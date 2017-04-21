@@ -29,6 +29,9 @@ import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.cloud.function.web.flux.request.DelegateHandler;
+import org.springframework.cloud.function.web.flux.request.FluxHandlerMethodArgumentResolver;
+import org.springframework.cloud.function.web.flux.request.FluxRequest;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ClassUtils;
@@ -52,8 +55,6 @@ import reactor.core.publisher.Mono;
 @ConditionalOnClass(RequestMappingHandlerMapping.class)
 public class FunctionHandlerMapping extends RequestMappingHandlerMapping {
 
-	public static final String HANDLER = FunctionHandlerMapping.class.getName()
-			+ ".HANDLER";
 	@Value("${spring.cloud.function.web.path:}")
 	private String prefix = "";
 	private ListableBeanFactory beanFactory;
@@ -130,7 +131,7 @@ public class FunctionHandlerMapping extends RequestMappingHandlerMapping {
 		if (method == null) {
 			return null;
 		}
-		request.setAttribute(HANDLER, method.getBean());
+		request.setAttribute(FluxHandlerMethodArgumentResolver.HANDLER, method.getBean());
 		return method;
 	}
 
